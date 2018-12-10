@@ -30,31 +30,54 @@
 @property(nonatomic, strong)UIImageView *tempImageView2;
 @property(nonatomic, strong)UIImage *image2;
 
+@property(nonatomic, strong)UIImageView *tempImageView3;
+@property(nonatomic, strong)UIImage *image3;
+
 @end
 
 @implementation GCDViewController
 
 - (void)touchesBegan:(NSSet<UITouch *> *)touches withEvent:(UIEvent *)event
 {
-    //信号量
-    [self signal];
-}
+    dispatch_queue_t queue = dispatch_queue_create("serial", DISPATCH_QUEUE_SERIAL);
+    dispatch_async(queue, ^{
+        NSLog(@"111:%@",[NSThread currentThread]);
+    });
+    dispatch_async(queue, ^{
+        NSLog(@"222:%@",[NSThread currentThread]);
+    });
+    dispatch_async(queue, ^{
+        NSLog(@"333:%@",[NSThread currentThread]);
+    });
 
+}
 - (void)viewDidLoad
 {
     [super viewDidLoad];
     
-    
-    
     [self.view addSubview:self.tempImageView1];
     [self.view addSubview:self.tempImageView2];
-
-    //[self signal1];
+    [self.view addSubview:self.tempImageView3];
     
     //调度组异步执行任务
-    [self group];
+    //[self dispatch_group_enter_leave];
+    //[self dispatch_group_async];
     
-    //[self asyncGroup];
+    //栅栏函数
+    //[self dispatch_barrier];
+    
+    //信号量
+    //[self dispatch_semaphore];
+    
+    //添加线程依赖
+    //[self operationQueue];
+    
+    //[self operationDependency];
+    
+    [self requestAA];
+    
+    [self requestBB];
+    
 }
 - (UIImageView *)tempImageView1
 {
@@ -76,9 +99,18 @@
     return _tempImageView2;
 }
 
+- (UIImageView *)tempImageView3
+{
+    if (!_tempImageView3)
+    {
+        _tempImageView3 = [[UIImageView alloc]initWithFrame:CGRectMake(10, 480, 220, 150)];
+        _tempImageView3.image = [UIImage imageNamed:@"3"];
+    }
+    return _tempImageView3;
+}
 /**********************dispatch_group 调度组******************/
 //调度组
-- (void)group
+- (void)dispatch_group_enter_leave
 {
     //创建队列组
     dispatch_group_t group = dispatch_group_create();
@@ -109,7 +141,7 @@
     });
 }
 
-- (void)asyncGroup
+- (void)dispatch_group_async
 {
     //队列组加载图片
     __block UIImage *image1;
@@ -142,7 +174,7 @@
     return image;
 }
 
-//GCD常用函数
+/**********************GCD常用函数******************/
 - (void)gcdFunction
 {
     //主队列 dispatch_get_main_queue()
@@ -188,79 +220,152 @@
     });
 }
 
-
-
 /**********************dispatch_barrier_async******************/
+//dispatch_barrier_async 和 dispatch_barrier_sync
+//共同点：
+/*
+1、等待在它前面插入队列的任务先执行完
+2、等待他们自己的任务执行完再执行后面的任务
+
+不同点（追加任务的不同）：
+1、dispatch_barrier_sync将自己的任务插入到队列的时候，需要等待自己的任务结束之后才会继续插入被写在它后面的任务，然后执行它们
+2、dispatch_barrier_async将自己的任务插入到队列之后，不会等待自己的任务结束，它会继续把后面的任务插入到队列，然后等待自己的任务结束后才执行后面任务。
+dispatch_barrier_async的不等待（异步）特性体现在将任务插入队列的过程，它的等待特性体现在任务真正执行的过程。
+*/
 //栅栏函数
-- (void)barrier
+- (void)dispatch_barrier
 {
+    //创建并发队列
     dispatch_queue_t queue = dispatch_queue_create("queue", DISPATCH_QUEUE_CONCURRENT);
     dispatch_async(queue, ^{
-        for (NSInteger i = 0 ; i < 5 ; i++)
-        {
-            NSLog(@"download1 -- %zd -- %@",i,[NSThread currentThread]);
-        }
+        self.image1  = [self loadImageData:@"http://img02.sogoucdn.com/app/a/07/154ab4353f086a9a1ae3eb1cd34d17b9"];
+        
+        [NSThread sleepForTimeInterval:5];
+        NSLog(@"图片1下载完成: %@",[NSThread currentThread]);
+        dispatch_async(dispatch_get_main_queue(), ^{
+            self.tempImageView1.image = self.image1;
+        });
     });
     dispatch_async(queue, ^{
-        for (NSInteger i = 0 ; i < 5 ; i++)
-        {
-            NSLog(@"download2 -- %zd -- %@",i,[NSThread currentThread]);
-        }
+        self.image2  = [self loadImageData:@"http://img03.sogoucdn.com/app/a/100520020/ae923a4747d1cdd755d5d238d1468cb3"];
+        
+        [NSThread sleepForTimeInterval:2];
+        NSLog(@"图片2下载完成: %@",[NSThread currentThread]);
+        dispatch_async(dispatch_get_main_queue(), ^{
+            self.tempImageView2.image = self.image2;
+        });
     });
     
     dispatch_barrier_async(queue, ^{
+        for (int i = 0; i <= 5000000; i++)
+        {
+            if (i == 5000)
+            {
+                NSLog(@"point1");
+            }
+            else if (i == 6000)
+            {
+                NSLog(@"point2");
+            }
+            else if (i == 7000)
+            {
+                NSLog(@"point3");
+            }
+        }
         NSLog(@"+++++++++++++++");
     });
     
+    NSLog(@"aaaaa");
     dispatch_async(queue, ^{
-        for (NSInteger i =0 ; i < 5 ; i++)
-        {
-            NSLog(@"download3 -- %zd -- %@",i,[NSThread currentThread]);
-        }
+        self.image3 = [self loadImageData:@"http://img3.redocn.com/tupian/20150408/shucaihelvyezhuangshideshiliangbiankuang_4036044.jpg"];
+        
+        [NSThread sleepForTimeInterval:2];
+        NSLog(@"图片3下载完成: %@",[NSThread currentThread]);
+        dispatch_async(dispatch_get_main_queue(), ^{
+            self.tempImageView3.image = self.image3;
+        });
+    });
+    
+    NSLog(@"bbbbb");
+    dispatch_async(queue, ^{
+        self.image2  = [self loadImageData:@"http://img03.sogoucdn.com/app/a/100520020/ae923a4747d1cdd755d5d238d1468cb3"];
+        
+        [NSThread sleepForTimeInterval:2];
+        NSLog(@"图片4下载完成: %@",[NSThread currentThread]);
+        dispatch_async(dispatch_get_main_queue(), ^{
+            self.tempImageView2.image = self.image2;
+        });
     });
 }
 
 /**********************dispatch_semaphore_t******************/
-- (void)signal
+//信号量实现异步线程同步操作
+- (void)dispatch_semaphore
 {
+    /*创建一个dispatch_semaphore_类型的信号量，并且创建的时候需要指定信号量的大小。
+    等待信号量和发送信号量的函数是成对出现的。
+    并发执行任务时候，在当前任务执行之前，用dispatch_semaphore_wait函数进行等待（阻塞），直到上一个任务执行完毕后且通过dispatch_semaphore_signal函数发送信号量（使信号量的值加1）。
+    dispatch_semaphore_wait
+    函数收到信号量之后判断信号量的值大于等于1，会再对信号量的值减1，然后当前任务可以执行，执行完毕当前任务后，再通过dispatch_semaphore_signal函数发送信号量（使信号量的值加1）
+    等待信号量：如果信号量值为0，那么该函数就会一直等待，也就是不返回（相当于阻塞当前线程），直到该函数等待的信号量的值大于等于1，该函数会对信号量的值进行减1操作，然后返回。
+    */
+    
     //value表示最多几个资源可访问
-    dispatch_semaphore_t semaphore = dispatch_semaphore_create(3);
-    //任务1
-    dispatch_async(global_queue, ^{
+    dispatch_semaphore_t semaphore = dispatch_semaphore_create(0);
+    
+    dispatch_async(dispatch_get_global_queue(0, 0), ^{
+        //任务1
+        dispatch_async(dispatch_get_global_queue(0, 0), ^{
+            self.image1  = [self loadImageData:@"http://img02.sogoucdn.com/app/a/07/154ab4353f086a9a1ae3eb1cd34d17b9"];
+
+            NSLog(@"图片1下载完成: %@",[NSThread currentThread]);
+            dispatch_async(dispatch_get_main_queue(), ^{
+                self.tempImageView1.image = self.image1;
+            });
+            
+            //发送信号量：该函数会对信号量的值进行加1操作
+            dispatch_semaphore_signal(semaphore);
+        });
         dispatch_semaphore_wait(semaphore, DISPATCH_TIME_FOREVER);
-        NSLog(@"run task 1");
-        sleep(1);
-        NSLog(@"complete task 1");
-        dispatch_semaphore_signal(semaphore);
+        
+        //任务2
+        dispatch_async(dispatch_get_global_queue(0, 0), ^{
+            self.image2  = [self loadImageData:@"http://img03.sogoucdn.com/app/a/100520020/ae923a4747d1cdd755d5d238d1468cb3"];
+
+            NSLog(@"图片2下载完成: %@",[NSThread currentThread]);
+            dispatch_async(dispatch_get_main_queue(), ^{
+                self.tempImageView2.image = self.image2;
+            });
+            
+            dispatch_semaphore_signal(semaphore);
+        });
+        dispatch_semaphore_wait(semaphore, DISPATCH_TIME_FOREVER);
+        
+        //任务3
+        dispatch_async(dispatch_get_global_queue(0, 0), ^{
+            self.image3 = [self loadImageData:@"http://img3.redocn.com/tupian/20150408/shucaihelvyezhuangshideshiliangbiankuang_4036044.jpg"];
+
+            NSLog(@"图片3下载完成: %@",[NSThread currentThread]);
+            dispatch_async(dispatch_get_main_queue(), ^{
+                self.tempImageView3.image = self.image3;
+            });
+            
+            dispatch_semaphore_signal(semaphore);
+        });
+        dispatch_semaphore_wait(semaphore, DISPATCH_TIME_FOREVER);
     });
     
-    //任务2
-    dispatch_async(global_queue, ^{
-        dispatch_semaphore_wait(semaphore, DISPATCH_TIME_FOREVER);
-        NSLog(@"run task 2");
-        sleep(1);
-        NSLog(@"complete task 2");
-        dispatch_semaphore_signal(semaphore);
-    });
-    
-    //任务3
-    dispatch_async(global_queue, ^{
-        dispatch_semaphore_wait(semaphore, DISPATCH_TIME_FOREVER);
-        NSLog(@"run task 3");
-        sleep(1);
-        NSLog(@"complete task 3");
-        dispatch_semaphore_signal(semaphore);
-    });
+    NSLog(@"信号量结束");
 }
 /**********************dispatch_apply******************/
 //文件管理 循环迭代，并发执行
 - (void)fileManagerDispatch_apply
 {
     // 要剪切的文件夹路径
-    NSString *fromPath = @"/Users/songweibo/Desktop/from";
+    NSString *fromPath = @"/Users/yang/Desktop/from";
     
     // 目标文件夹的路径
-    NSString *toPath = @"/Users/songweibo/Desktop/to";
+    NSString *toPath = @"/Users/yang/Desktop/to";
     
     NSFileManager *fileManager = [NSFileManager defaultManager];
     
@@ -271,8 +376,8 @@
     
     // 遍历文件并执行剪切文件的操作
     NSInteger count = subPaths.count;
-    dispatch_apply(count, dispatch_get_global_queue(0, 0), ^(size_t index) {
-        
+    dispatch_apply(count, dispatch_get_global_queue(0, 0), ^(size_t index)
+    {
         // 文件的名称
         NSString *fileName = subPaths[index];
         // 拼接文件的全路径
@@ -285,26 +390,6 @@
         
         NSLog(@"%@  %@   %@",subPath,fullPath,[NSThread currentThread]);
     });
-}
-
-- (void)signal1
-{
-    dispatch_semaphore_t semaphore = dispatch_semaphore_create(0);
-    dispatch_async(global_queue, ^{
-        for (int i = 0; i<8; i++)
-        {
-            NSLog(@"i的值是:%d",i);
-        }
-        //发送通知
-        dispatch_semaphore_signal(semaphore);
-    });
-    
-    //信号量等待
-    dispatch_semaphore_wait(semaphore, DISPATCH_TIME_FOREVER);
-    for (int k = 0; k<5; k++)
-    {
-        NSLog(@"k的值是:%d",k);
-    }
 }
 
 /**********************NSOperationQueue******************/
@@ -328,27 +413,29 @@
         }
     }];
     //实现线程同步
-    //添加线程依赖
-    [operation1 addDependency:operation2];
+    //添加线程依赖，先执行operation2，后执行operation1
+    [operation2 addDependency:operation2];
     //分别添加到队列中
     [queue addOperation:operation1];
     [queue addOperation:operation2];
 }
 /**********************NSOperationQueue和信号量******************/
--(void)dispatchAllRequest{
+//NSBlockOperation和dispatch_semaphore_t实现并发队列中的线程同步
+-(void)operationDependency
+{
     // 利用线程依赖关系测试
-    __weak typeof (self)weakSelf =self;
+    //__weak typeof (self)weakSelf =self;
     
     NSBlockOperation * operation1 = [NSBlockOperation blockOperationWithBlock:^{
-        [weakSelf requestA];
+        [self requestAA];
         
     }];
     NSBlockOperation * operation2 = [NSBlockOperation blockOperationWithBlock:^{
-        [weakSelf requestB];
+        [self requestBB];
         
     }];
     NSBlockOperation * operation3 = [NSBlockOperation blockOperationWithBlock:^{
-        [weakSelf requestC];
+        [self requestCC];
         
     }];
     [operation2 addDependency:operation1];
@@ -364,17 +451,15 @@
     AFHTTPSessionManager *manager = [AFHTTPSessionManager manager];;
     manager.responseSerializer = [AFHTTPResponseSerializer serializer];
     manager.responseSerializer.acceptableContentTypes = [NSSet setWithObjects:@"application/json", @"text/json", @"text/javascript",@"text/html",nil];
-    [manager GET:@"http://qr.bookln.cn/qr.html?crcode=110000000F00000000000000B3ZX1CEC" parameters:nil progress:nil success:^(NSURLSessionDataTask * _Nonnull task, id  _Nullable responseObject) {
-        
+    [manager GET:@"http://qr.bookln.cn/qr.html?crcode=110000000F00000000000000B3ZX1CEC" parameters:nil progress:nil success:^(NSURLSessionDataTask * _Nonnull task, id  _Nullable responseObject)
+    {
         dispatch_semaphore_signal(sema);
         NSLog(@"正在执行A");
         
     } failure:^(NSURLSessionDataTask * _Nullable task, NSError * _Nonnull error) {
         ////计数+1操作
-        
         dispatch_semaphore_signal(sema);
         NSLog(@"执行错误A");
-        
     }];
     
     NSLog(@"正在刷新A");
@@ -389,16 +474,15 @@
     AFHTTPSessionManager *manager = [AFHTTPSessionManager manager];;
     manager.responseSerializer = [AFHTTPResponseSerializer serializer];
     manager.responseSerializer.acceptableContentTypes = [NSSet setWithObjects:@"application/json", @"text/json", @"text/javascript",@"text/html",nil];
-    [manager GET:@"http://qr.bookln.cn/qr.html?crcode=110000000F00000000000000B3ZX1CEC" parameters:nil progress:nil success:^(NSURLSessionDataTask * _Nonnull task, id  _Nullable responseObject) {
+    [manager GET:@"http://qr.bookln.cn/qr.html?crcode=110000000F00000000000000B3ZX1CEC" parameters:nil progress:nil success:^(NSURLSessionDataTask * _Nonnull task, id  _Nullable responseObject)
+    {
+        [NSThread sleepForTimeInterval:8];
         dispatch_semaphore_signal(sema);
         NSLog(@"正在执行B");
-        
     } failure:^(NSURLSessionDataTask * _Nullable task, NSError * _Nonnull error) {
         ////计数+1操作
-        
         dispatch_semaphore_signal(sema);
         NSLog(@"执行错误B");
-        
     }];
     
     NSLog(@"正在刷新B");
@@ -407,24 +491,22 @@
     NSLog(@"已经刷新B");
     
 }
--(void)requestC{
-    
+-(void)requestC
+{
     //创建信号量并设置计数默认为0
     dispatch_semaphore_t sema = dispatch_semaphore_create(0);
-    
     AFHTTPSessionManager *manager = [AFHTTPSessionManager manager];;
     manager.responseSerializer = [AFHTTPResponseSerializer serializer];
     manager.responseSerializer.acceptableContentTypes = [NSSet setWithObjects:@"application/json", @"text/json", @"text/javascript",@"text/html",nil];
-    [manager GET:@"http://qr.bookln.cn/qr.html?crcode=110000000F00000000000000B3ZX1CEC" parameters:nil progress:nil success:^(NSURLSessionDataTask * _Nonnull task, id  _Nullable responseObject) {
+    [manager GET:@"http://qr.bookln.cn/qr.html?crcode=110000000F00000000000000B3ZX1CEC" parameters:nil progress:nil success:^(NSURLSessionDataTask * _Nonnull task, id  _Nullable responseObject)
+    {
+        [NSThread sleepForTimeInterval:4];
         dispatch_semaphore_signal(sema);
         NSLog(@"正在执行C");
-        
     } failure:^(NSURLSessionDataTask * _Nullable task, NSError * _Nonnull error) {
         ////计数+1操作
-        
         dispatch_semaphore_signal(sema);
         NSLog(@"执行错误C");
-        
     }];
     
     NSLog(@"正在刷新C");
@@ -432,4 +514,53 @@
     dispatch_semaphore_wait(sema, DISPATCH_TIME_FOREVER);
     NSLog(@"已经刷新C");
 }
+
+-(void)requestAA
+{
+    AFHTTPSessionManager *manager = [AFHTTPSessionManager manager];;
+    manager.responseSerializer = [AFHTTPResponseSerializer serializer];
+    manager.responseSerializer.acceptableContentTypes = [NSSet setWithObjects:@"application/json", @"text/json", @"text/javascript",@"text/html",nil];
+    NSLog(@"当前线程2 %@", [NSThread currentThread]);
+    [manager GET:@"http://qr.bookln.cn/qr.html?crcode=110000000F00000000000000B3ZX1CEC" parameters:nil progress:nil success:^(NSURLSessionDataTask * _Nonnull task, id  _Nullable responseObject)
+    {
+        [NSThread sleepForTimeInterval:8];
+        NSLog(@"正在执行A %@", [NSThread currentThread]);
+        
+    } failure:^(NSURLSessionDataTask * _Nullable task, NSError * _Nonnull error) {
+        NSLog(@"执行错误A");
+    }];
+    
+    NSLog(@"正在刷新A %@", [NSThread currentThread]);
+}
+-(void)requestBB
+{
+    AFHTTPSessionManager *manager = [AFHTTPSessionManager manager];;
+    manager.responseSerializer = [AFHTTPResponseSerializer serializer];
+    manager.responseSerializer.acceptableContentTypes = [NSSet setWithObjects:@"application/json", @"text/json", @"text/javascript",@"text/html",nil];
+    NSLog(@"当前线程1 %@", [NSThread currentThread]);
+    [manager GET:@"http://qr.bookln.cn/qr.html?crcode=110000000F00000000000000B3ZX1CEC" parameters:nil progress:nil success:^(NSURLSessionDataTask * _Nonnull task, id  _Nullable responseObject)
+     {
+         [NSThread sleepForTimeInterval:4];
+         NSLog(@"正在执行B %@", [NSThread currentThread]);
+     } failure:^(NSURLSessionDataTask * _Nullable task, NSError * _Nonnull error) {
+         NSLog(@"执行错误B");
+     }];
+    
+    NSLog(@"正在刷新B %@", [NSThread currentThread]);
+}
+-(void)requestCC
+{
+    AFHTTPSessionManager *manager = [AFHTTPSessionManager manager];;
+    manager.responseSerializer = [AFHTTPResponseSerializer serializer];
+    manager.responseSerializer.acceptableContentTypes = [NSSet setWithObjects:@"application/json", @"text/json", @"text/javascript",@"text/html",nil];
+    [manager GET:@"http://qr.bookln.cn/qr.html?crcode=110000000F00000000000000B3ZX1CEC" parameters:nil progress:nil success:^(NSURLSessionDataTask * _Nonnull task, id  _Nullable responseObject)
+    {
+        NSLog(@"正在执行C");
+    } failure:^(NSURLSessionDataTask * _Nullable task, NSError * _Nonnull error) {
+        NSLog(@"执行错误C");
+    }];
+    
+    NSLog(@"正在刷新C");
+}
+
 @end
