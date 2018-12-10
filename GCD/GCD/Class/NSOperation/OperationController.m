@@ -13,35 +13,39 @@
 
 @interface OperationController ()
 
-{
-    NSString *imageUrl;
-}
+@property(nonatomic, copy)NSString *imageUrl;
+
 @property(nonatomic, strong)UIImageView *tempImageView;
 
 @end
 
 @implementation OperationController
 
-- (void)viewDidLoad {
+- (void)viewDidLoad
+{
     [super viewDidLoad];
+    
+    self.view.backgroundColor = [UIColor whiteColor];
     
     [self.view addSubview:self.tempImageView];
     
-    imageUrl = @"http://img04.sogoucdn.com/app/a/100520024/8272033edf9190a2cdedcd599781614f";
+    _imageUrl = @"http://img04.sogoucdn.com/app/a/100520024/8272033edf9190a2cdedcd599781614f";
     
     if (_flag == 0)
     {
         //NSInvocationOperation创建线程
-        NSInvocationOperation *invocationOperation = [[NSInvocationOperation alloc]initWithTarget:self selector:@selector(loadImageData:) object:imageUrl];
+        NSInvocationOperation *invocationOperation = [[NSInvocationOperation alloc]initWithTarget:self selector:@selector(loadImageData:) object:_imageUrl];
         //直接在当前线程主线程执行
         NSOperationQueue *queue = [[NSOperationQueue alloc] init];
         [queue addOperation:invocationOperation];
     }
     else
     {
+        __weak __typeof(self) weakSelf = self;
         //NSBlockOperation创建线程
         NSBlockOperation *blockOperation = [NSBlockOperation blockOperationWithBlock:^{
-            [self loadImageData:imageUrl];
+            __strong __typeof(weakSelf) strongSelf = weakSelf;
+            [strongSelf loadImageData:strongSelf.imageUrl];
         }];
         NSOperationQueue *queue = [[NSOperationQueue alloc] init];
         [queue addOperation:blockOperation];

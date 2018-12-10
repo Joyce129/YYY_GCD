@@ -13,6 +13,7 @@
 #import "GCDViewController.h"
 
 #import "AFNetworking.h"
+
 //宏定义全局并发队列
 #define global_queue dispatch_get_global_queue(0, 0)
 
@@ -20,12 +21,14 @@
 #define main_queue dispatch_get_main_queue()
 
 @interface GCDViewController ()
+{
 
+}
 @property(nonatomic, strong)UIImageView *tempImageView1;
+@property(nonatomic, strong)UIImage *image1;
 
 @property(nonatomic, strong)UIImageView *tempImageView2;
-
-@property(nonatomic, strong)UIImageView *tempImageView3;
+@property(nonatomic, strong)UIImage *image2;
 
 @end
 
@@ -40,19 +43,25 @@
 - (void)viewDidLoad
 {
     [super viewDidLoad];
+    
+    
+    
     [self.view addSubview:self.tempImageView1];
     [self.view addSubview:self.tempImageView2];
-    [self.view addSubview:self.tempImageView3];
+
     //[self signal1];
     
+    //调度组异步执行任务
     [self group];
+    
+    //[self asyncGroup];
 }
 - (UIImageView *)tempImageView1
 {
     if (!_tempImageView1)
     {
-        _tempImageView1 = [[UIImageView alloc]initWithFrame:CGRectMake(10, 120, 100, 100)];
-        _tempImageView1.backgroundColor = [UIColor redColor];
+        _tempImageView1 = [[UIImageView alloc]initWithFrame:CGRectMake(10, 120, 220, 150)];
+        _tempImageView1.image = [UIImage imageNamed:@"1"];
     }
     return _tempImageView1;
 }
@@ -61,22 +70,71 @@
 {
     if (!_tempImageView2)
     {
-        _tempImageView2 = [[UIImageView alloc]initWithFrame:CGRectMake(150, 120, 100, 100)];
-        _tempImageView2.backgroundColor = [UIColor greenColor];
+        _tempImageView2 = [[UIImageView alloc]initWithFrame:CGRectMake(10, 300, 220, 150)];
+        _tempImageView2.image = [UIImage imageNamed:@"2"];
     }
     return _tempImageView2;
 }
 
-- (UIImageView *)tempImageView3
+/**********************dispatch_group 调度组******************/
+//调度组
+- (void)group
 {
-    if (!_tempImageView3)
-    {
-        _tempImageView3 = [[UIImageView alloc]initWithFrame:CGRectMake(10, 250, 200, 100)];
-        _tempImageView3.backgroundColor = [UIColor purpleColor];
-    }
-    return _tempImageView3;
+    //创建队列组
+    dispatch_group_t group = dispatch_group_create();
+    
+    //入组
+    dispatch_group_enter(group);
+    dispatch_async(dispatch_get_global_queue(0, 0), ^{
+        self.image1 = [self loadImageData:@"http://pic1.cxtuku.com/00/03/76/b37005566943.jpg"];
+        NSLog(@"图片1下载完成: %@",[NSThread currentThread]);
+        //出组
+        dispatch_group_leave(group);
+    });
+    
+    //入组
+    dispatch_group_enter(group);
+    dispatch_async(dispatch_get_global_queue(0, 0), ^{
+        self.image2 = [self loadImageData:@"http://img3.redocn.com/tupian/20150408/shucaihelvyezhuangshideshiliangbiankuang_4036044.jpg"];
+        NSLog(@"图片2下载完成: %@",[NSThread currentThread]);
+        //出组
+        dispatch_group_leave(group);
+    });
+    
+    //监听任务完成
+    dispatch_group_notify(group, dispatch_get_main_queue(), ^{
+        self.tempImageView1.image = self.image1;
+        self.tempImageView2.image = self.image2;
+        NSLog(@"显示图片: %@",[NSThread currentThread]);
+    });
 }
 
+- (void)asyncGroup
+{
+    //队列组加载图片
+    __block UIImage *image1;
+    __block UIImage *image2;
+    //创建队列组
+    dispatch_group_t group = dispatch_group_create();
+
+    //下载任务1
+    dispatch_group_async(group, dispatch_get_global_queue(0, 0), ^{
+        image1  = [self loadImageData:@"http://img02.sogoucdn.com/app/a/07/154ab4353f086a9a1ae3eb1cd34d17b9"];
+        NSLog(@"图片1下载完成: %@",[NSThread currentThread]);
+    });
+    
+    //下载任务2
+    dispatch_group_async(group, dispatch_get_global_queue(0, 0), ^{
+        image2  = [self loadImageData:@"http://img03.sogoucdn.com/app/a/100520020/ae923a4747d1cdd755d5d238d1468cb3"];
+        NSLog(@"图片2下载完成: %@",[NSThread currentThread]);
+    });
+    
+    dispatch_group_notify(group, dispatch_get_main_queue(), ^{
+        self.tempImageView1.image = image1;
+        self.tempImageView2.image = image2;
+        NSLog(@"显示图片: %@",[NSThread currentThread]);
+    });
+}
 - (UIImage *)loadImageData:(NSString *)urlString
 {
     NSData *data = [NSData dataWithContentsOfURL:[NSURL URLWithString:urlString]];
@@ -87,19 +145,24 @@
 //GCD常用函数
 - (void)gcdFunction
 {
+    //主队列 dispatch_get_main_queue()
+    //全局队列 dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0)
+    //执行一次 dispatch_once
+    //循环遍历 dispatch_apply
+    //延迟执行 dispatch_after
+    
     //UI线程执行，长时间加载内容不放在主线程
     dispatch_async(dispatch_get_main_queue(), ^{
         
     });
     
     //全局并发队列，线程创建
-    dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_HIGH, 0), ^{
+    dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
         
     });
     
     //一次性执行，单例 dispatch_once
     static dispatch_once_t onceToken;
-    
     dispatch_once(&onceToken, ^{
         
     });
@@ -107,11 +170,12 @@
     //并发执行，循环迭代 dispatch_apply
     size_t count = 5;
     dispatch_queue_t queue = dispatch_get_global_queue(0, 0);
-    dispatch_apply(count, queue, ^(size_t i) {
+    dispatch_apply(count, queue, ^(size_t i)
+    {
         NSLog(@"循环执行第%ld次", i);
     });
     
-    //延迟执行 dispatch_after
+    //延迟执行
     dispatch_time_t when = dispatch_time(DISPATCH_TIME_NOW, 2 * NSEC_PER_SEC);
     dispatch_after(when, dispatch_get_main_queue(), ^{
         
@@ -124,78 +188,7 @@
     });
 }
 
-/**********************dispatch_group_async******************/
-//调度组
-- (void)group
-{
-    //队列组加载图片
-    dispatch_group_t group = dispatch_group_create();
-    
-    //入组
-    dispatch_group_enter(group);
-    UIImage *image1 = [self loadImageData:@"http://img02.sogoucdn.com/app/a/07/154ab4353f086a9a1ae3eb1cd34d17b9"];
-    NSLog(@"图片1下载完成: %@",[NSThread currentThread]);
-    //出组
-    dispatch_group_leave(group);
-    
-    //入组
-    dispatch_group_enter(group);
-    UIImage *image2 = [self loadImageData:@"http://img03.sogoucdn.com/app/a/100520020/ae923a4747d1cdd755d5d238d1468cb3"];
-    NSLog(@"图片2下载完成: %@",[NSThread currentThread]);
-    //出组
-    dispatch_group_leave(group);
-    
-    dispatch_group_notify(group, dispatch_get_main_queue(), ^{
-        self.tempImageView1.image = image1;
-        self.tempImageView2.image = image2;
-        NSLog(@"显示图片: %@",[NSThread currentThread]);
-    });
-    
-     /*
-    //队列组加载图片
-    __block UIImage *image1;
-    __block UIImage *image2;
-    dispatch_group_t group = dispatch_group_create();
-    
-    
-    
-    dispatch_group_async(group, global_queue, ^{
-        image1  = [self loadImageData:@"http://img02.sogoucdn.com/app/a/07/154ab4353f086a9a1ae3eb1cd34d17b9"];
-        NSLog(@"图片1下载完成: %@",[NSThread currentThread]);
-    });
-    
-    dispatch_group_async(group, global_queue, ^{
-        
-        NSLog(@"下载完成1: %@",[NSThread currentThread]);
-    });
-    
-    dispatch_group_async(group, global_queue, ^{
-        
-        NSLog(@"下载完成2: %@",[NSThread currentThread]);
-    });
-    
-    dispatch_group_async(group, global_queue, ^{
-        image2  = [self loadImageData:@"http://img03.sogoucdn.com/app/a/100520020/ae923a4747d1cdd755d5d238d1468cb3"];
-        NSLog(@"图片2下载完成: %@",[NSThread currentThread]);
-    });
-    
-    dispatch_group_notify(group, main_queue, ^{
-        self.tempImageView1.image = image1;
-        self.tempImageView2.image = image2;
-        NSLog(@"显示图片: %@",[NSThread currentThread]);
-        
-        //合并两张图片
-        UIGraphicsBeginImageContextWithOptions(CGSizeMake(200, 100), 1, 1);
-        [self.tempImageView1 drawRect:CGRectMake(0, 0, 100, 100)];
-        [self.tempImageView2 drawRect:CGRectMake(100, 0, 100, 100)];
-        self.tempImageView3.image = UIGraphicsGetImageFromCurrentImageContext();
-        
-        //关闭图像上下文
-        UIGraphicsEndImageContext();
-        NSLog(@"图片合并完成: %@",[NSThread currentThread]);
-    });
-     */
-}
+
 
 /**********************dispatch_barrier_async******************/
 //栅栏函数
