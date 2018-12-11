@@ -7,8 +7,9 @@
 //
 
 #import <UIKit/UIKit.h>
+#import "BackViewController.h"
 
-@interface OperationController : UIViewController
+@interface OperationController : BackViewController
 
 @property(nonatomic,assign)NSInteger flag;
 

@@ -8,7 +8,9 @@
 
 #import <UIKit/UIKit.h>
 
-@interface ThreadViewController : UIViewController
+#import "BackViewController.h"
+
+@interface ThreadViewController : BackViewController
 
 @property(nonatomic,assign)NSInteger flag;
 
