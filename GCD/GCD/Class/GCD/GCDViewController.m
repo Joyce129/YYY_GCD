@@ -37,20 +37,6 @@
 
 @implementation GCDViewController
 
-- (void)touchesBegan:(NSSet<UITouch *> *)touches withEvent:(UIEvent *)event
-{
-    dispatch_queue_t queue = dispatch_queue_create("serial", DISPATCH_QUEUE_SERIAL);
-    dispatch_async(queue, ^{
-        NSLog(@"111:%@",[NSThread currentThread]);
-    });
-    dispatch_async(queue, ^{
-        NSLog(@"222:%@",[NSThread currentThread]);
-    });
-    dispatch_async(queue, ^{
-        NSLog(@"333:%@",[NSThread currentThread]);
-    });
-
-}
 - (void)viewDidLoad
 {
     [super viewDidLoad];
@@ -60,7 +46,8 @@
     [self.view addSubview:self.tempImageView3];
     
     //调度组异步执行任务
-    //[self dispatch_group_enter_leave];
+    [self dispatch_group_enter_leave];
+    
     //[self dispatch_group_async];
     
     //栅栏函数
@@ -72,12 +59,8 @@
     //添加线程依赖
     //[self operationQueue];
     
+    //信号量和线程依赖实现线程同步
     //[self operationDependency];
-    
-    [self requestAA];
-    
-    [self requestBB];
-    
 }
 - (UIImageView *)tempImageView1
 {
@@ -427,15 +410,15 @@ dispatch_barrier_async的不等待（异步）特性体现在将任务插入队�
     //__weak typeof (self)weakSelf =self;
     
     NSBlockOperation * operation1 = [NSBlockOperation blockOperationWithBlock:^{
-        [self requestAA];
+        [self requestA];
         
     }];
     NSBlockOperation * operation2 = [NSBlockOperation blockOperationWithBlock:^{
-        [self requestBB];
+        [self requestB];
         
     }];
     NSBlockOperation * operation3 = [NSBlockOperation blockOperationWithBlock:^{
-        [self requestCC];
+        [self requestC];
         
     }];
     [operation2 addDependency:operation1];
@@ -531,36 +514,6 @@ dispatch_barrier_async的不等待（异步）特性体现在将任务插入队�
     }];
     
     NSLog(@"正在刷新A %@", [NSThread currentThread]);
-}
--(void)requestBB
-{
-    AFHTTPSessionManager *manager = [AFHTTPSessionManager manager];;
-    manager.responseSerializer = [AFHTTPResponseSerializer serializer];
-    manager.responseSerializer.acceptableContentTypes = [NSSet setWithObjects:@"application/json", @"text/json", @"text/javascript",@"text/html",nil];
-    NSLog(@"当前线程1 %@", [NSThread currentThread]);
-    [manager GET:@"http://qr.bookln.cn/qr.html?crcode=110000000F00000000000000B3ZX1CEC" parameters:nil progress:nil success:^(NSURLSessionDataTask * _Nonnull task, id  _Nullable responseObject)
-     {
-         [NSThread sleepForTimeInterval:4];
-         NSLog(@"正在执行B %@", [NSThread currentThread]);
-     } failure:^(NSURLSessionDataTask * _Nullable task, NSError * _Nonnull error) {
-         NSLog(@"执行错误B");
-     }];
-    
-    NSLog(@"正在刷新B %@", [NSThread currentThread]);
-}
--(void)requestCC
-{
-    AFHTTPSessionManager *manager = [AFHTTPSessionManager manager];;
-    manager.responseSerializer = [AFHTTPResponseSerializer serializer];
-    manager.responseSerializer.acceptableContentTypes = [NSSet setWithObjects:@"application/json", @"text/json", @"text/javascript",@"text/html",nil];
-    [manager GET:@"http://qr.bookln.cn/qr.html?crcode=110000000F00000000000000B3ZX1CEC" parameters:nil progress:nil success:^(NSURLSessionDataTask * _Nonnull task, id  _Nullable responseObject)
-    {
-        NSLog(@"正在执行C");
-    } failure:^(NSURLSessionDataTask * _Nullable task, NSError * _Nonnull error) {
-        NSLog(@"执行错误C");
-    }];
-    
-    NSLog(@"正在刷新C");
 }
 
 @end
