@@ -7,6 +7,8 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		2F6A3CAB21BF5CFA00BA6B32 /* BaseNavigationController.m in Sources */ = {isa = PBXBuildFile; fileRef = 2F6A3CAA21BF5CFA00BA6B32 /* BaseNavigationController.m */; };
+		2F6A3CAE21BF5DD900BA6B32 /* BackViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 2F6A3CAD21BF5DD900BA6B32 /* BackViewController.m */; };
 		2F73FEE621BE03F500EA6460 /* AppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = 2F73FEE521BE03F500EA6460 /* AppDelegate.m */; };
 		2F73FEEE21BE03F600EA6460 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 2F73FEED21BE03F600EA6460 /* Assets.xcassets */; };
 		2F73FEF421BE03F600EA6460 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 2F73FEF321BE03F600EA6460 /* main.m */; };
@@ -22,6 +24,10 @@
 
 /* Begin PBXFileReference section */
 		218C8D5CB3A3825D659C16E2 /* Pods-GCD.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-GCD.debug.xcconfig"; path = "Pods/Target Support Files/Pods-GCD/Pods-GCD.debug.xcconfig"; sourceTree = "<group>"; };
+		2F6A3CA921BF5CF900BA6B32 /* BaseNavigationController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = BaseNavigationController.h; sourceTree = "<group>"; };
+		2F6A3CAA21BF5CFA00BA6B32 /* BaseNavigationController.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = BaseNavigationController.m; sourceTree = "<group>"; };
+		2F6A3CAC21BF5DD900BA6B32 /* BackViewController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = BackViewController.h; sourceTree = "<group>"; };
+		2F6A3CAD21BF5DD900BA6B32 /* BackViewController.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = BackViewController.m; sourceTree = "<group>"; };
 		2F73FEE121BE03F500EA6460 /* GCD.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = GCD.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		2F73FEE421BE03F500EA6460 /* AppDelegate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AppDelegate.h; sourceTree = "<group>"; };
 		2F73FEE521BE03F500EA6460 /* AppDelegate.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = AppDelegate.m; sourceTree = "<group>"; };
@@ -138,6 +144,10 @@
 				2F73FF0A21BE089400EA6460 /* BaseViewController.m */,
 				2F73FF0B21BE089400EA6460 /* RootViewController.h */,
 				2F73FF0C21BE089400EA6460 /* RootViewController.m */,
+				2F6A3CA921BF5CF900BA6B32 /* BaseNavigationController.h */,
+				2F6A3CAA21BF5CFA00BA6B32 /* BaseNavigationController.m */,
+				2F6A3CAC21BF5DD900BA6B32 /* BackViewController.h */,
+				2F6A3CAD21BF5DD900BA6B32 /* BackViewController.m */,
 			);
 			path = Root;
 			sourceTree = "<group>";
@@ -253,7 +263,9 @@
 				2F73FF1221BE089400EA6460 /* BaseViewController.m in Sources */,
 				2F73FF0E21BE089400EA6460 /* NSOperationController.m in Sources */,
 				2F73FF0F21BE089400EA6460 /* OperationController.m in Sources */,
+				2F6A3CAB21BF5CFA00BA6B32 /* BaseNavigationController.m in Sources */,
 				2F73FF1321BE089400EA6460 /* RootViewController.m in Sources */,
+				2F6A3CAE21BF5DD900BA6B32 /* BackViewController.m in Sources */,
 				2F73FF1021BE089400EA6460 /* NSThreadController.m in Sources */,
 				2F73FEF421BE03F600EA6460 /* main.m in Sources */,
 				2F73FEE621BE03F500EA6460 /* AppDelegate.m in Sources */,

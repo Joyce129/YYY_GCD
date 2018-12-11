@@ -26,10 +26,11 @@
     [super viewDidLoad];
     
     self.view.backgroundColor = [UIColor whiteColor];
+    self.title = @"NSOperationQueue使用语法";
     
     [self.view addSubview:self.tempImageView];
     
-    _imageUrl = @"http://img04.sogoucdn.com/app/a/100520024/8272033edf9190a2cdedcd599781614f";
+    _imageUrl = @"http://pic1.cxtuku.com/00/03/76/b37005566943.jpg";
     
     if (_flag == 0)
     {
@@ -41,11 +42,9 @@
     }
     else
     {
-        __weak __typeof(self) weakSelf = self;
         //NSBlockOperation创建线程
         NSBlockOperation *blockOperation = [NSBlockOperation blockOperationWithBlock:^{
-            __strong __typeof(weakSelf) strongSelf = weakSelf;
-            [strongSelf loadImageData:strongSelf.imageUrl];
+            [self loadImageData:self.imageUrl];
         }];
         NSOperationQueue *queue = [[NSOperationQueue alloc] init];
         [queue addOperation:blockOperation];
@@ -57,7 +56,8 @@
 {
     if (!_tempImageView)
     {
-        _tempImageView = [[UIImageView alloc]initWithFrame:CGRectMake(50, 100, 300, 533)];
+        _tempImageView = [[UIImageView alloc]initWithFrame:CGRectMake(10, 120, 350, 300)];
+        _tempImageView.image = [UIImage imageNamed:@"1"];
     }
     return _tempImageView;
 }

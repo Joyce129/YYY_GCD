@@ -10,6 +10,7 @@
 //
 
 #import "RootViewController.h"
+#import "BaseNavigationController.h"
 
 #import "NSThreadController.h"
 #import "NSOperationController.h"
@@ -41,7 +42,7 @@
     
     for (int i=0; i<3; i++)
     {
-        UINavigationController *navVC = [[UINavigationController alloc] initWithRootViewController:controllers[i]];
+        BaseNavigationController *navVC = [[BaseNavigationController alloc] initWithRootViewController:controllers[i]];
         [subControllers addObject:navVC];
     }
     [self setViewControllers:subControllers animated:YES];

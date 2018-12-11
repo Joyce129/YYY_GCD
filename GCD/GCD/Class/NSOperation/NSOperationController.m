@@ -40,9 +40,11 @@
     if (!cell)
     {
         cell = [[UITableViewCell alloc]initWithStyle:UITableViewCellStyleDefault reuseIdentifier:identify];
+        cell.textLabel.textColor = [UIColor blackColor];
+        cell.textLabel.font = [UIFont systemFontOfSize:14];
+        cell.selectionStyle = UITableViewCellSelectionStyleNone;
     }
-    cell.textLabel.textColor = [UIColor blackColor];
-    cell.textLabel.font = [UIFont systemFontOfSize:14];
+    
     cell.textLabel.text = self.cellTitlesArray[indexPath.row];
     return cell;
 }
@@ -50,6 +52,7 @@
 - (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath
 {
     OperationController *operation = [[OperationController alloc]init];
+    operation.flag = indexPath.row;
     [self.navigationController pushViewController:operation animated:YES];
 }
 

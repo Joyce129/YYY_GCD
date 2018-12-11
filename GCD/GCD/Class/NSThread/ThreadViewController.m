@@ -26,7 +26,8 @@
 {
     [super viewDidLoad];
     
-    self.title = @"GCD线程之间的通讯";
+    self.view.backgroundColor = [UIColor whiteColor];
+    self.title = @"NSThread使用语法";
 
     //创建线程
     //[self createThread];
@@ -60,8 +61,10 @@
 {
     //获取当前线程
     NSThread *currentThread = [NSThread currentThread];
+    
     //获取主线程
     NSThread *mainThread = [NSThread mainThread];
+    
     //暂停当前线程
     [NSThread sleepForTimeInterval:2];
     
@@ -80,7 +83,8 @@
 {
     if (!_tempImageView)
     {
-        _tempImageView = [[UIImageView alloc]initWithFrame:CGRectMake(50, 100, 300, 533)];
+        _tempImageView = [[UIImageView alloc]initWithFrame:CGRectMake(10, 120, 350, 300)];
+        _tempImageView.image = [UIImage imageNamed:@"2"];
     }
     return _tempImageView;
 }
@@ -97,19 +101,11 @@
 
 - (void)staticThreadAction:(NSString *)urlString
 {
-    if (!_tempImageView)
-    {
-        [self.view addSubview:self.tempImageView];
-    }
     [self dynamicThreadAction:urlString];
 }
 
 - (void)implicitThreadAction:(NSString *)urlString
 {
-    if (!_tempImageView)
-    {
-        [self.view addSubview:self.tempImageView];
-    }
     [self dynamicThreadAction:urlString];
 }
 
